@@ -1699,6 +1699,20 @@ static void executeCombo(Teams attackerTeam, Teams defenderTeam, boolean isCount
             if (isAlive(team1.getActive())) team1.getActive().recoverKi(1);
             if (isAlive(team2.getActive())) team2.getActive().recoverKi(1);
 
+            // Unique Gauge decay for UIGoku and MUIGoku (active fighter only)
+            if (isAlive(team1.getActive())) {
+                if (team1.getActive() instanceof MUIGoku)
+                    ((MUIGoku) team1.getActive()).decayUniqueGauge();
+                else if (team1.getActive() instanceof UIGoku)
+                    ((UIGoku) team1.getActive()).decayUniqueGauge();
+            }
+            if (isAlive(team2.getActive())) {
+                if (team2.getActive() instanceof MUIGoku)
+                    ((MUIGoku) team2.getActive()).decayUniqueGauge();
+                else if (team2.getActive() instanceof UIGoku)
+                    ((UIGoku) team2.getActive()).decayUniqueGauge();
+            }
+
  if (isAlive(team1.getActive()) && isAlive(team2.getActive())) {
             team1.getActive().mainAbility(team2.getActive());
             team2.getActive().mainAbility(team1.getActive());
@@ -5752,6 +5766,7 @@ void mainAbility(Fighter target) {
     if (main1Used && !main2Used && Main.timer >= 50) {
 
         main2Used = true;
+        ultunlocked=true;
 
         System.out.println("[" + myTeam.teamName + "] "
     +"You SHOULD DIE!!!");
@@ -6054,8 +6069,8 @@ class Janemba extends Fighter {
                 name + " tears reality apart!"
             );
 
-            usedstrike=0;
-            usedblast=0;
+            usedstrike=2;
+            usedblast=2;
 
         }
     }
@@ -8130,7 +8145,7 @@ void hakai(Fighter target){
         target.applyTempDefenseDown(2, 3);
         inflictBleed(target);
         inflictFaint(target);
-        target.applyBuffCancelImmunity(5);
+        applyBuffCancelImmunity(5);
         applyColorImmunity(5);
         target.applyNoswitch(3);
         applyImmuneGuage(5);
