@@ -8808,27 +8808,19 @@ void counter(Fighter attacker){
         defenseMul+=0.8;
         heal=1.5;
     }
-    else if(endurancetimes==3){
-        System.out.println("Begone!!");
-        damageMul+=1.0;
-        defenseMul+=1.0;
-        heal=1.75;
-    }
-
     justDodged=true;
     gainKi(100);
-    applyKiImmune(40);
+    applyKiImmune(20);
     setDrawSpeedFor(2,10);
-    applyBuffCancelImmunity(40);
-    applyDamageDown(0.5, 40);
-    applyTempDefenseUp(0.3, 40);
-    applyDamageBuff(0.2, 40);
+    applyBuffCancelImmunity(20);
+    applyDamageDown(0.15, 20);
+    applyTempDefenseUp(0.2, 20);
+    applyDamageBuff(0.15, 20);
     applyImmune(40);
-    applyColorImmunity(40);
-    applyImmuneHand(40);
-    applyCannotUltNullification(20);
-    sealMain(attacker, 15);
-    attacker.applyNoswitch(5);
+    applyColorImmunity(10);
+    applyImmuneHand(10);
+    applyCannotUltNullification(10);
+    sealMain(attacker, 10);
     drawCardsSmart();
     attacker.vanish=0;
 }
@@ -8846,7 +8838,7 @@ double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, 
     }
     else if(type == Card.SPMOVE || type == Card.ULT){
         if(cancelbuffnum>0){
-        baseDamage*=0.5;
+        baseDamage*=0.7;
         attacker.cancelBuffs();
         cancelbuffnum--;
     }
@@ -8856,7 +8848,7 @@ double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, 
     double dmg=super.takeDamage(attacker,baseDamage, attackerDamageMul, critical,type);
      if (!endurancehas && hpBeforeDamage - dmg <= 0
              && !attacker.sacrifice) {
-                if(endurancetimes==2){
+                if(endurancetimes==1){
                 endurancehas = true;
                 }
         endurancetimes++;
