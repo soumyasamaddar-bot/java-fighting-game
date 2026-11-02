@@ -1679,9 +1679,8 @@ static void executeCombo(Teams attackerTeam, Teams defenderTeam, boolean isCount
             if (!isAlive(team2.getActive())) {
                 checkDeathAndHandle(team2, team1.getActive());
             }
-
-            // Spirit Bomb preparation uses an absolute timer and continues while
-            // SSJ3 Goku is benched. Resolve it against the opponent's active fighter.
+            // Spirit Bomb preparation uses an absolute timer and keeps charging while
+            // SSJ3 Goku is benched, but it only launches when he is the active fighter.
             for (Fighter f : team1.fighters) {
                 if (f instanceof Ssj3Goku && isAlive(f)) {
                     ((Ssj3Goku) f).updateSpiritBomb(team2.getActive());
@@ -7374,6 +7373,8 @@ class Ssj3Goku extends Fighter {
      * inherited preparation deadline is absolute, so benching does not pause it. */
     void updateSpiritBomb(Fighter activeEnemy) {
         if (!preparationStarted || spirit || hp <= 0 || preparation <= 0) return;
+        // Preparation keeps charging on the bench, but the bomb only launches from the battlefield.
+        if (myTeam == null || myTeam.getActive() != this) return;
         if (Main.timer >= preparation && activeEnemy != null && activeEnemy.hp > 0) {
             preparationmodeon = true;
             spiritbomb(activeEnemy);
