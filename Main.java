@@ -7133,8 +7133,10 @@ void counter(Fighter target){
 double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, double critical, Card type) {
     if ((type == Card.STRIKE || type == Card.BLAST) && !attacker.immuneguage) {
         if(tryUniqueDodge()){
+        cardcostimmune(5);
         attacker.updateTimedStatuses();
         justDodged=true;
+        clearCardCostIncrease();
         applyColorImmunity(5);
         double dmg=2*strikedmg;
         if(attacker.releaseguagetimer)
@@ -8798,19 +8800,19 @@ void counter(Fighter attacker){
         System.out.println("DONT RUN!");
         damageMul+=0.5;
         defenseMul+=0.5;
-        heal=1.5;
+        heal=1.0;
     }
     else if(endurancetimes==2){
         System.out.println("Piece of trash!!");
         damageMul+=0.8;
         defenseMul+=0.8;
-        heal=2.0;
+        heal=1.5;
     }
     else if(endurancetimes==3){
         System.out.println("Begone!!");
         damageMul+=1.0;
         defenseMul+=1.0;
-        heal=2.5;
+        heal=1.75;
     }
 
     justDodged=true;
@@ -8833,15 +8835,14 @@ void counter(Fighter attacker){
 
 @Override
 double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, double critical, Card type) {
-    baseDamage*=0.5;
+    baseDamage*=0.7;
     if(type==null){
-        heal(500000*heal);
+        heal(200000*heal);
         attacker.applyNoswitch(5);
         applyTempDefenseUp(2, 10);
-        applyColorImmunity(10);
         applyDamageDown(0.5, 10);
         attacker.cancelBuffs();
-        baseDamage*=0.3;
+        baseDamage*=0.7;
     }
     else if(type == Card.SPMOVE || type == Card.ULT){
         if(cancelbuffnum>0){
@@ -8860,7 +8861,7 @@ double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, 
                 }
         endurancetimes++;
         hp = maxhp; // endurance HP
-        System.out.println(name + " YOu cannot Defeat me!");
+        System.out.println(name + " You cannot Defeat me!");
         counter(attacker);
         return dmg;
     }
@@ -8869,7 +8870,7 @@ double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, 
             System.out.println("ENDURANCE NULLIFIED BY "+attacker.name);
         }
     applyTempDefenseUp(0.2,5);
-    attacker.cardcostincreaseall(20, 10);
+    attacker.cardcostincreaseall(10, 10);
     attacker.applyTempDefenseDown(0.2,5);
     return dmg;
 }
