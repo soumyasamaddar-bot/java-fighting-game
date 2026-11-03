@@ -1679,8 +1679,8 @@ static void executeCombo(Teams attackerTeam, Teams defenderTeam, boolean isCount
             if (!isAlive(team2.getActive())) {
                 checkDeathAndHandle(team2, team1.getActive());
             }
-            // Spirit Bomb preparation uses an absolute timer and keeps charging while
-            // SSJ3 Goku is benched, but it only launches when he is the active fighter.
+            // Spirit Bomb preparation uses an absolute timer and continues while
+            // SSJ3 Goku is benched. Resolve it against the opponent's active fighter.
             for (Fighter f : team1.fighters) {
                 if (f instanceof Ssj3Goku && isAlive(f)) {
                     ((Ssj3Goku) f).updateSpiritBomb(team2.getActive());
@@ -3883,7 +3883,7 @@ class ZenkaiVegeta extends Fighter {
         if (hp <= 0 && !endurancehas
                 && !isEnduranceNullifiedBy(attacker)) {
             endurancehas = true;
-            hp = Math.min(maxhp, 1200000);
+            hp = maxhp*0.5;
             System.out.println(name + " refuses to fall and keeps fighting!");
             return damage;
         }
@@ -4513,6 +4513,7 @@ int buffcancle=3;
     target.ki=Math.max(0,target.ki);
     ki=Math.min(ki, 100);
     myTeam.drawCards(1);
+    super.switchIn(target);
 }
     
      @Override
@@ -4768,68 +4769,18 @@ void faint(Fighter target) {
 
 @Override
 double takeDamage(Fighter attacker, double baseDamage, double attackerDamageMul, double critical, Card type) {
-
-    // 🔴 CANCEL BUFFS if hit by strong attacks
-    if (type == Card.SPMOVE || type == Card.ULT) {
-        if(buffcancle>0)
-        {
-        baseDamage*=0.5;
+    if ((type == Card.SPMOVE || type == Card.ULT) && buffcancle > 0) {
+        baseDamage *= 0.5;
         attacker.cancelBuffs();
         buffcancle--;
-        }
     }
-
-    // 🔢 Calculate damage FIRST (but don't apply yet)
-    double actualDamage = baseDamage
-        * Main.colorDamageMultiplier(attacker, this);
-
-    // CRITICAL
-    if (critical > 0.8) {
-        actualDamage *= 1.5;
-        System.out.print("CRITICAL HIT!!! ");
-    }
-
-    // DEFENSE CALCULATION
-    double effectiveDefense = defenseMul * lbDefense;
-
-    if (Main.timer <= tempDefEndTime) {
-        effectiveDefense -= tempDefDown;
-    }
-
-    if (Main.timer <= tempDefUpEndTime) {
-        effectiveDefense += tempDefUp;
-    }
-
-    effectiveDefense = Math.max(0, effectiveDefense);
-    double defenseFactor = 1.0 / (1.0 + effectiveDefense);
-
-    actualDamage *= attackerDamageMul;
-    actualDamage *= defenseFactor;
-
-    // DAMAGE REDUCTION BUFF
-    actualDamage *= (1 - currentDamageDown());
-
-    // 🟡 ENDURANCE CHECK (BEFORE HP DROPS TO 0)
-    if (!endurancehas && hp - actualDamage <= 0
-            && !isEnduranceNullifiedBy(attacker)) {
+    double dmg = super.takeDamage(attacker, baseDamage, attackerDamageMul, critical, type);
+    if (!endurancehas && hp <= 0 && !isEnduranceNullifiedBy(attacker)) {
         endurancehas = true;
-        hp = 1500000; // endurance HP
+        hp = maxhp*0.5;
         System.out.println(name + " ENDURES THE ATTACK!");
-        return actualDamage;
     }
-    else{
-        if(hp<=0 && !endurancehas && isEnduranceNullifiedBy(attacker))
-            System.out.println("ENDURANCE NULLIFIED BY "+attacker.name);
-        }
-
-    // 🔻 APPLY DAMAGE
-    hp -= actualDamage;
-    if (hp < 0) hp = 0;
-
-    System.out.println(name + " took " + Math.round(actualDamage) +
-                       " damage! HP left: " + Math.round(hp));
-
-    return actualDamage;
+    return dmg;
 }
 
 }
@@ -4988,8 +4939,8 @@ void switchAbility()
         {
             applyDamageBuff(0.3, 10);
             EndNullify(10);
-            super.switchIn(target);
         }
+        super.switchIn(target);
     }
     
     @Override
@@ -5018,6 +4969,8 @@ class MajinVegeta extends Fighter {
         ultdmg=2500000;
         drawspeed=1;
         hasBlastArmor=true;
+        permanentbuffcancelimmunity = true;
+        applyBuffCancelImmunity(240);
         setSpecialMoveRange(AttackRange.MELEE);
         setQuirkComboable(true);
     }
@@ -5095,16 +5048,6 @@ boolean quirk(Fighter target, boolean quirkcannotbevanished) {
     return super.quirk(target, quirkcannotbevanished); 
 }
 
-@Override
-   void cancelBuffs() {
-        
-        if(buffCancelImmune){
-            System.out.println(name + "'s buffs cannot be CANCELLED!");
-            buffCancelImmune=false;
-            return;
-        }
-        super.cancelBuffs(); 
-   }
    
        @Override
     boolean ultimate(Fighter target, double ultdmg) {
@@ -5651,9 +5594,13 @@ boolean quirk(Fighter target, boolean quirkcannotbevanished) {
 
     @Override
     void switchIn(Fighter target){
-        cannotultnull=false;
-        immuneindestructible=false;
-            
+        colourNullGrantsPermanent=true;
+        applyColorImmunity(5);
+        applyDamageBuff(0.15, 5);
+        if (!target.kiimmune)          
+        target.ki = Math.max(0, target.ki - 15);
+        target.applyNoswitch(5);
+        super.switchIn(target);    
     }
 
 
@@ -5996,7 +5943,7 @@ double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, 
     if (!endurancehas && hpBeforeDamage - dmg <= 0
             && !isEnduranceNullifiedBy(attacker)) {
         endurancehas = true;
-        hp = 1500000; // endurance HP
+        hp = maxhp*0.5;; // endurance HP
         System.out.println(name + " ENDURES THE ATTACK!");
         return dmg;
     }
@@ -6321,7 +6268,7 @@ double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, 
      if (!endurancehas && hpBeforeDamage - dmg <= 0
              && !isEnduranceNullifiedBy(attacker)) {
         endurancehas = true;
-        hp = 1500000; // endurance HP
+        hp = maxhp*0.5;; // endurance HP
         System.out.println(name + " ENDURES THE ATTACK!");
         return dmg;
     }
@@ -6690,7 +6637,7 @@ double takeDamage(Fighter attacker,double baseDamage, double attackerDamageMul, 
      if (!endurancehas && hpBeforeDamage - dmg <= 0
              && !isEnduranceNullifiedBy(attacker)) {
         endurancehas = true;
-        hp = 1500000; // endurance HP
+        hp = maxhp*0.5; // endurance HP
         System.out.println(name + " ENDURES THE ATTACK!");
         times=0;
         disrupt(attacker);
@@ -7302,10 +7249,10 @@ class Ssj3Goku extends Fighter {
 
     @Override
     void switchIn(Fighter target) {
-        super.switchIn(target);
         gainGauge(40, target);
         applyColorImmunity(5);
         preparation(target);
+        super.switchIn(target);
     }
 
     /** Once the HP threshold is crossed, perform the disruption effects and
@@ -7373,8 +7320,6 @@ class Ssj3Goku extends Fighter {
      * inherited preparation deadline is absolute, so benching does not pause it. */
     void updateSpiritBomb(Fighter activeEnemy) {
         if (!preparationStarted || spirit || hp <= 0 || preparation <= 0) return;
-        // Preparation keeps charging on the bench, but the bomb only launches from the battlefield.
-        if (myTeam == null || myTeam.getActive() != this) return;
         if (Main.timer >= preparation && activeEnemy != null && activeEnemy.hp > 0) {
             preparationmodeon = true;
             spiritbomb(activeEnemy);
